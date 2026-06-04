@@ -1,0 +1,6 @@
+{
+  "name": "PetPulse AI",
+  "description": "PetPulse AI smart collar landing page & brand showcase - decode your pet's emotions, personality, and health using advanced AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
