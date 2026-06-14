@@ -3,6 +3,7 @@ import { appFeatures } from "../data";
 import { Smartphone } from "lucide-react";
 import { motion } from "motion/react";
 import TiltHover from "./TiltHover";
+import ScrollReveal from "./ScrollReveal";
 
 interface AppEcosystemProps {
   lifestyleImageUrl: string;
@@ -53,7 +54,11 @@ export default function AppEcosystem({ lifestyleImageUrl }: AppEcosystemProps) {
             </TiltHover>
 
             {/* Float badge */}
-            <div className="absolute top-6 left-6 bg-black/90 backdrop-blur-md border border-white/15 px-4 py-2.5 rounded-xl z-20 shadow-lg">
+            <motion.div 
+              className="absolute top-6 left-6 bg-black/90 backdrop-blur-md border border-white/15 px-4 py-2.5 rounded-xl z-20 shadow-lg cursor-pointer"
+              whileHover={{ scale: 1.05, y: -2 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest font-mono">Active Sync</div>
               <div 
                 className="text-sm font-semibold flex items-center gap-1.5 mt-0.5 transition-colors duration-1000"
@@ -62,7 +67,7 @@ export default function AppEcosystem({ lifestyleImageUrl }: AppEcosystemProps) {
                 <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: "var(--theme-color)" }} />
                 <span className="font-space-grotesk">On-Device Bluetooth LE</span>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Right Column: Descriptions & Subfeatures sliding in the opposite direction */}
@@ -73,27 +78,29 @@ export default function AppEcosystem({ lifestyleImageUrl }: AppEcosystemProps) {
             viewport={{ once: false, amount: 0.15, margin: "-120px" }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div 
-              className="text-xs md:text-sm font-bold tracking-[0.2em] uppercase mb-3 transition-colors duration-1000"
-              style={{ color: "var(--theme-color)", opacity: 0.85 }}
-            >
-              Mobile Companion
-            </div>
-            
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-space-grotesk font-bold text-white leading-tight mb-5">
-              An Entire Emotional Map
-              <br />
-              <span 
-                className="text-transparent bg-clip-text transition-all duration-1000"
-                style={{ backgroundImage: "linear-gradient(to right, var(--theme-color), #4D9FFF)" }}
+            <ScrollReveal animation="cinematic-reveal" duration={900}>
+              <div 
+                className="text-xs md:text-sm font-bold tracking-[0.2em] uppercase mb-3 transition-colors duration-1000 font-space-grotesk"
+                style={{ color: "var(--theme-color)", opacity: 0.85 }}
               >
-                Right In Your Pocket
-              </span>
-            </h2>
-            
-            <p className="text-sm sm:text-base md:text-lg text-gray-400 leading-relaxed max-w-xl mx-auto md:mx-0 mb-8 font-sans">
-              The PetPulse companion mobile app streams raw telemetry data directly into custom graphical widgets. Track weekly distress indices, establish safe tracking zones, and receive real-time emotional recommendations.
-            </p>
+                Mobile Companion
+              </div>
+              
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-space-grotesk font-bold text-white leading-tight mb-5">
+                An Entire Emotional Map
+                <br />
+                <span 
+                  className="text-transparent bg-clip-text transition-all duration-1000"
+                  style={{ backgroundImage: "linear-gradient(to right, var(--theme-color), #4D9FFF)" }}
+                >
+                  Right In Your Pocket
+                </span>
+              </h2>
+              
+              <p className="text-sm sm:text-base md:text-lg text-gray-400 leading-relaxed max-w-xl mx-auto md:mx-0 mb-8 font-sans">
+                The PetPulse companion mobile app streams raw telemetry data directly into custom graphical widgets. Track weekly distress indices, establish safe tracking zones, and receive real-time emotional recommendations.
+              </p>
+            </ScrollReveal>
 
             <div className="space-y-6 mb-10 text-left max-w-xl mx-auto md:mx-0">
               {appFeatures.map((feature, index) => {

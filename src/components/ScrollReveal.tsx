@@ -11,7 +11,8 @@ interface ScrollRevealProps {
     | "blur-clear" 
     | "scale-up" 
     | "glow-reveal" 
-    | "depth-reveal";
+    | "depth-reveal"
+    | "cinematic-reveal";
   delay?: number; // ms
   duration?: number; // ms
   threshold?: number; // 0 to 1
@@ -108,6 +109,11 @@ export default function ScrollReveal({
         transformClasses = isRevealed 
           ? "opacity-100 scale-100 rotate-0" 
           : "opacity-0 scale-90 rotate-x-12";
+        break;
+      case "cinematic-reveal":
+        transformClasses = isRevealed 
+          ? "opacity-100 translate-y-0 blur-0" 
+          : "opacity-0 translate-y-[15px] blur-[6px]";
         break;
       default:
         transformClasses = isRevealed ? "opacity-100" : "opacity-0";

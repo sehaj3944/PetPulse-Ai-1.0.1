@@ -12,6 +12,7 @@ import {
   PawPrint
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function AppScreens() {
   // Simulating internal app states
@@ -588,12 +589,10 @@ export default function AppScreens() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <motion.div 
+        <ScrollReveal 
+          animation="cinematic-reveal"
+          duration={900}
           className="text-center mb-20 space-y-4"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.15, margin: "-100px" }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-4xl md:text-5xl font-space-grotesk font-bold text-white leading-tight">
             Interactive App Ecosystem
@@ -630,7 +629,7 @@ export default function AppScreens() {
               Simulate Live Vitals Sync
             </button>
           </div>
-        </motion.div>
+        </ScrollReveal>
 
         {/* 8 Phone Mockups Grid, Staggered Slide In with Out-of-sync Idle Float */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -663,7 +662,17 @@ export default function AppScreens() {
                   }}
                 >
                   {/* Physical Phone Casing Mockup */}
-                  <div className="relative w-[180px] aspect-[9/19] bg-[#0A0A0F] rounded-[2.5rem] shadow-[0_0_40px_rgba(0,0,0,0.65)] hover:scale-[1.03] transition-transform duration-300 border-4 border-white/5">
+                  <div 
+                    className="relative w-[180px] aspect-[9/19] bg-[#0A0A0F] rounded-[2.5rem] shadow-[0_0_40px_rgba(0,0,0,0.65)] hover:scale-[1.04] transition-all duration-350 border-4 border-white/5 cursor-pointer"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "var(--theme-color)";
+                      e.currentTarget.style.boxShadow = "0 15px 45px -10px var(--theme-glow), 0 0 15px var(--theme-glow-subtle)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
+                      e.currentTarget.style.boxShadow = "0 0 40px rgba(0,0,0,0.65)";
+                    }}
+                  >
                     {/* Phone Bezel Interior Screen */}
                     <div className={`absolute inset-2.5 rounded-[2rem] overflow-hidden bg-gradient-to-br ${screen.bg} border border-white/10 select-none`}>
                       {/* Speaker camera bar "notch" */}

@@ -2,6 +2,7 @@ import React from "react";
 import { aiFeatures } from "../data";
 import { Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function AIFeatures() {
   const stats = [
@@ -42,12 +43,10 @@ export default function AIFeatures() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <motion.div 
+        <ScrollReveal 
+          animation="cinematic-reveal"
+          duration={900}
           className="text-center mb-20 space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.15, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full mb-4">
             <Sparkles className="w-4 h-4 transition-colors duration-1000" style={{ color: "var(--theme-color)" }} />
@@ -66,7 +65,7 @@ export default function AIFeatures() {
           <p className="text-gray-400 max-w-3xl mx-auto text-sm md:text-base leading-relaxed">
             Our multi-tier neural models process continuous biological feeds on-device and in the cloud—converting biometric data streams into rich, actionable emotional clarity.
           </p>
-        </motion.div>
+        </ScrollReveal>
 
         {/* Features Cards Grid with Staggered Scroll-Triggers */}
         <motion.div 
@@ -81,13 +80,14 @@ export default function AIFeatures() {
             return (
               <motion.div 
                 key={index} 
-                className="bg-white/5 border rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group flex flex-col justify-between cursor-pointer"
+                className="bg-white/5 border rounded-2xl p-8 hover:bg-white/10 transition-all duration-350 group flex flex-col justify-between cursor-pointer"
                 style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
                 variants={cardVariants}
                 whileHover={{
+                  y: -6,
                   scale: 1.02,
                   borderColor: "var(--theme-color)",
-                  boxShadow: "0 10px 30px -10px var(--theme-glow)"
+                  boxShadow: "0 15px 40px -10px var(--theme-glow), 0 0 15px var(--theme-glow-subtle)"
                 }}
               >
                 <div>

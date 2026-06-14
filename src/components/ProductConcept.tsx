@@ -1,6 +1,7 @@
 import React from "react";
 import { conceptCards } from "../data";
 import { motion } from "motion/react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function ProductConcept() {
   const containerVariants = {
@@ -35,12 +36,10 @@ export default function ProductConcept() {
       />
 
       <div className="max-w-7xl mx-auto position-relative z-10">
-        <motion.div 
+        <ScrollReveal 
+          animation="cinematic-reveal"
+          duration={900}
           className="text-center mb-20 space-y-4"
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.15, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <div 
             className="text-sm font-bold tracking-widest uppercase transition-colors duration-1000"
@@ -61,7 +60,7 @@ export default function ProductConcept() {
           <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
             PetPulse AI™ represents a fundamental paradigm shift in pet technology—moving away from trivial distance tracking into highly accurate bio-emotional translation.
           </p>
-        </motion.div>
+        </ScrollReveal>
 
         {/* Concept Cards Grid with Staggered Scroll-Triggers */}
         <motion.div 
@@ -76,13 +75,14 @@ export default function ProductConcept() {
             return (
               <motion.div 
                 key={index} 
-                className="group bg-white/5 border rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                className="group bg-white/5 border rounded-2xl p-8 hover:bg-white/10 transition-all duration-350 flex flex-col justify-between cursor-pointer"
                 style={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
                 variants={cardVariants}
                 whileHover={{ 
-                  scale: 1.015,
+                  y: -6,
+                  scale: 1.02,
                   borderColor: "var(--theme-color)",
-                  boxShadow: "0 10px 30px -10px var(--theme-glow)"
+                  boxShadow: "0 15px 40px -10px var(--theme-glow), 0 0 15px var(--theme-glow-subtle)"
                 }}
               >
                 <div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Sparkles, PawPrint } from "lucide-react";
 import { motion } from "motion/react";
+import ScrollReveal from "./ScrollReveal";
 
 export default function Branding() {
   const [logoPulseRate, setLogoPulseRate] = useState(2); // seconds per pulse
@@ -49,12 +50,10 @@ export default function Branding() {
       <style>{shimmerAnimation}</style>
       <div className="max-w-7xl mx-auto relative z-10">
         
-        <motion.div 
+        <ScrollReveal 
+          animation="cinematic-reveal"
+          duration={900}
           className="text-center mb-20 space-y-4"
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.15, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <div 
             className="text-sm font-bold tracking-widest uppercase transition-colors duration-1000"
@@ -68,16 +67,22 @@ export default function Branding() {
           <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
             Unveiling the visual guidelines, core slogans, and psychological personality dimensions that characterize the PetPulse AI™ brand.
           </p>
-        </motion.div>
+        </ScrollReveal>
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Left Column: Logo Showcase with customizable pulsing rate */}
           <motion.div 
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col justify-between"
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col justify-between transition-all duration-350 cursor-pointer"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: false, amount: 0.15, margin: "-100px" }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{
+              y: -6,
+              scale: 1.01,
+              borderColor: "var(--theme-color)",
+              boxShadow: "0 15px 40px -15px var(--theme-glow), 0 0 15px var(--theme-glow-subtle)"
+            }}
           >
             <div>
               <h3 className="text-2xl font-bold text-white mb-2 font-space-grotesk">Visual Logo Construct</h3>
@@ -172,11 +177,17 @@ export default function Branding() {
 
           {/* Right Column: Slogans & Taglines */}
           <motion.div 
-            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col justify-between"
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col justify-between transition-all duration-350 cursor-pointer"
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: false, amount: 0.15, margin: "-100px" }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{
+              y: -6,
+              scale: 1.01,
+              borderColor: "var(--theme-color)",
+              boxShadow: "0 15px 40px -15px var(--theme-glow), 0 0 15px var(--theme-glow-subtle)"
+            }}
           >
             <div>
               <h3 className="text-2xl font-bold text-white mb-2 font-space-grotesk">Approved Slogans</h3>
