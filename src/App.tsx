@@ -11,7 +11,6 @@ import AIFeatures from "./components/AIFeatures";
 import AppEcosystem from "./components/AppEcosystem";
 import AppScreens from "./components/AppScreens";
 import Branding from "./components/Branding";
-import AdCopywriting from "./components/AdCopywriting";
 import Jingle from "./components/Jingle";
 import Testimonials from "./components/Testimonials";
 import CTABanner from "./components/CTABanner";
@@ -127,8 +126,6 @@ export default function App() {
         <AppScreens />
         
         <Branding />
-        
-        <AdCopywriting />
         
         <Jingle />
         
