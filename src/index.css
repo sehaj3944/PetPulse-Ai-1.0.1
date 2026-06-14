@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-space-grotesk: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-space-grotesk: "Space Grotesk", "Plus Jakarta Sans", sans-serif;
   --color-theme-accent: var(--theme-color);
   --color-theme-text: var(--theme-text-color);
   --color-theme-glow: var(--theme-glow);
@@ -29,6 +29,10 @@ html {
 
 body {
   font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6, .section-title, .hero-heading {
+  font-family: var(--font-space-grotesk);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
