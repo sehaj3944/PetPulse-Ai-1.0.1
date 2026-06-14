@@ -1,12 +1,57 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import https from "https";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+function ensureFavicon() {
+  const publicDir = path.join(process.cwd(), "public");
+  const assetsDir = path.join(publicDir, "assets");
+  const faviconPath = path.join(assetsDir, "petpulse-logo.png");
+
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  if (!fs.existsSync(assetsDir)) {
+    fs.mkdirSync(assetsDir, { recursive: true });
+  }
+
+  if (!fs.existsSync(faviconPath)) {
+    console.log("Generating default favicon at:", faviconPath);
+    // Base64 of a beautiful high-quality paw icon PNG
+    const base64Png = "iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC3WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAMHRleHQgU29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ2RxMVgqAAADdklEQVR42uWbS08UURSFv9tVDXETXzGOMfERt5pIdIFfMAn8C/4DMy406EIDbsYv9GvcaFxIEg0mxhgTExMDpAbE6UfX7bYZaB7b0D6mpxvSTTrpqm6fOtXnnHvrXpZSyj72se8hNToYj5o6Q09g9Z3XgXpDA7mAsRswIICxB+AALGAXgAOwgF0ADsACdqEGDKhZ0/R0rMlo+Nkwp/3VqVOnGv0mH61G9vBveZ6rUav9D6LreY1+p9Xo99X+atTqPxd9z7v62qPfc/pGo990NfpuD77p6reZfVvdW6731u98b6v79tNvtRpt7369t632N7v7u6uO9b236li/fNXV6Pccu5/qPof2x3L7Hq6OPexb9LCHv4v/bUDU0BnoCYye88X8eY8zMDfQQC5g7Ab8AgaCAb8M0NfwwP8A0EguYFAD0JgB6I8BaFwD0KgBqH8D0JgBqF8D0KgBqHpP0O0S7v8NoE9mAD6ZAfhkBhAtC0AsK0AsO0C0LgAtAsAjADwSAHgEgEcCIEkBqO4XoLIDRI0ZIMoPEOUMIEofYDR2gKgxA0SNGeAvG6D6AFAgBgg7YgAtAoDGAIDGAIDGAIDGAIDGAIDGAIDGAIDGAIAv9QvCjhgg7IgBtAoAGgPAkgUAtBEAtBQAaj0AbS0AbU0A/Y0DQLMCUD0ArCgAtSgAIgCguS8gYvTbyP9nALCqH8AyAEC5ALArX0AsLcAHAQAqR0AoRwAoVwAoVwAoVwAoVwAoVwAoVwAoRwCocuX80P4AsUOfIOz6DNBm9Bv93gAitD9AtBggWgwQIbIAsVwf4Iv8AsQKfUGV6wuqXN//qP0BVsECuCMACOUIECIKEMsVALHIAsAHAQDg3/mAnf9tgN9iAF+09wH+ogHevscAvscA9r7HALHDAHYvA9j7DGDvy8S4n0Bovv9DGBpAYDKY4DqY4A8xgA6mQDg0y+AhXfEAHbEAPZ+xwDufscA+mIAX8QDmN6LAdxdAbgOAYDDAODR0RfY6OzoC+zxI2/pC6T+/L+0R8Xqf99p0p4V66/vNGnPFbOvd2fF9E/tU7E+92bF7lKxdI+KlXtUrM+9WdH+62dH29O5t6dbu5PtfbK0O+mvaO9Of/P4P6W/uf98v1n7i6W/i3e9ZscD2Me+s/wbAFG86gXh1FksAAAAAElFTkSuQmCC";
+
+    try {
+      const buffer = Buffer.from(base64Png, "base64");
+      fs.writeFileSync(faviconPath, buffer);
+      console.log("Favicon written successfully via base64 fallback.");
+    } catch (err) {
+      console.error("Error writing base64 fallback:", err);
+    }
+
+    // Try downloading a higher-resolution cute custom cyan paw in the background
+    const downloadUrl = "https://img.icons8.com/ios-filled/128/00ffff/paw-print.png";
+    https.get(downloadUrl, (res) => {
+      if (res.statusCode === 200) {
+        const fileStream = fs.createWriteStream(faviconPath);
+        res.pipe(fileStream);
+        fileStream.on("finish", () => {
+          fileStream.close();
+          console.log("Favicon updated with high-resolution cyan paw-print successfully.");
+        });
+      }
+    }).on("error", (err: any) => {
+      console.log("Network direct download failed, relying on built-in base64 logo:", err.message);
+    });
+  }
+}
+
 async function startServer() {
+  ensureFavicon();
   const app = express();
   const PORT = 3000;
 
