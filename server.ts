@@ -2,57 +2,11 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import https from "https";
-import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-// Highly efficient, thread-safe sliding window rate limiter
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute window
-const MAX_REQUESTS_PER_MINUTE = 6; // strict anti-abuse limit
-
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-function isRateLimited(clientHash: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(clientHash);
-
-  // Lazy garbage collection to guarantee safe memory bounds
-  if (rateLimitMap.size > 2000) {
-    for (const [key, val] of rateLimitMap.entries()) {
-      if (now > val.resetTime) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }
-
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(clientHash, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW,
-    });
-    return false;
-  }
-
-  if (record.count >= MAX_REQUESTS_PER_MINUTE) {
-    return true;
-  }
-
-  record.count += 1;
-  return false;
-}
-
-function sanitizeText(input: any): string {
-  if (typeof input !== "string") return "";
-  // Strip script tags, basic HTML tags, and strictly cap token size
-  return input
-    .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, "")
-    .replace(/<\/?[^>]+(>|$)/g, "")
-    .slice(0, 1000) // Secure maximum limit per message
-    .trim();
-}
 
 function ensureFavicon() {
   const publicDir = path.join(process.cwd(), "public");
@@ -101,56 +55,30 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Setup basic security headers manually for container deployments without breaking frame embeds
-  app.use((req, res, next) => {
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    next();
-  });
-
   app.use(express.json());
 
-  // Initialize Gemini client secure on server-side
+  // Initialize Gemini client on server-side
   const apiKey = process.env.GEMINI_API_KEY;
   const ai = apiKey ? new GoogleGenAI({
     apiKey: apiKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build-hardened',
+        'User-Agent': 'aistudio-build',
       }
     }
   }) : null;
 
-  // API Route for PetPulse AI Assistant Chat hardended
+  // API Route for PetPulse AI Assistant Chat
   app.post("/api/chat", async (req, res) => {
     try {
-      const rawMessage = req.body?.message;
-      const rawHistory = req.body?.history;
-
-      // 1. Input sanitization
-      const message = sanitizeText(rawMessage);
+      const { message, history } = req.body;
+      
       if (!message) {
-        return res.status(400).json({ error: "Invalid telemetry message format or payload exceeds threshold." });
-      }
-
-      // 2. Compute obfuscated client hash (Zero PII footprint)
-      const rawIp = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "anonymous").toString();
-      const clientHash = crypto
-        .createHash("sha256")
-        .update(rawIp + (process.env.GEMINI_API_KEY || "salt-petpulse"))
-        .digest("hex")
-        .slice(0, 16);
-
-      // 3. Evaluate rate-limiter
-      if (isRateLimited(clientHash)) {
-        return res.status(200).json({
-          text: "🚨 **Rate Limit Engaged**: Telemetry analyzer cooling down. Please wait a minute before polling the smart collar biometrics again. We protect collar sensor bandwidth from excessive syncs."
-        });
+        return res.status(400).json({ error: "Message is required." });
       }
 
       if (!ai) {
-        // Fallback response when GEMINI_API_KEY is not set/available yet (graces developer mode)
+        // Fallback response when GEMINI_API_KEY is not set/available yet
         return res.json({
           text: `**[Demo Mode Active]** The PetPulse AI Assistant is ready! Please configure your \`GEMINI_API_KEY\` in the **Settings > Secrets** panel of AI Studio to enable real-time replies from Gemini.\n\n*   **Telemetry Report**: On-collar continuous bio-sensors are calibrating.\n*   **HRV Status**: Heart rate variability indicates standard puppy/kitten baselines.\n*   *Safety Reminder*: Please note that while we provide behavioral telemetry feedback, our insights always complement, but never replace, professional hands-on veterinary care.*`
         });
@@ -169,20 +97,14 @@ PERSONALITY & DISCLAIMERS:
 - End your short paragraph with a tiny, ultra-casual note: "(Btw, I'm just an AI pal, not a real vet! Always check with your vet for medical stuff.)"
 - If a pet is in an obvious critical medical emergency, immediately drop the casual tone and say: "Oh no, that sounds really serious. Please get to an emergency vet right away! 🚨"`;
 
-      // Map conversation history format correctly for standard Gemini payload
+      // Format messages into Content array for Gemini SDK.
       const contents: any[] = [];
-      if (rawHistory && Array.isArray(rawHistory)) {
-        // Limit history frames size bounds (last 6 exchanges max)
-        const safeHistory = rawHistory.slice(-6);
-        for (const msg of safeHistory) {
-          const role = msg.role === "user" ? "user" : "model";
-          const content = sanitizeText(msg.content);
-          if (content) {
-            contents.push({
-              role,
-              parts: [{ text: content }]
-            });
-          }
+      if (history && Array.isArray(history)) {
+        for (const msg of history) {
+          contents.push({
+            role: msg.role === "user" ? "user" : "model",
+            parts: [{ text: msg.content }]
+          });
         }
       }
       contents.push({
@@ -190,7 +112,7 @@ PERSONALITY & DISCLAIMERS:
         parts: [{ text: message }]
       });
 
-      // Request content generation using high-speed gemini-3.5-flash
+      // Use modern and fast model
       const gRes = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: contents,
@@ -200,13 +122,10 @@ PERSONALITY & DISCLAIMERS:
       });
 
       const replyText = gRes.text || "I was unable to analyze that telemetry signature. Please try again.";
-      res.json({ text: sanitizeText(replyText) });
+      res.json({ text: replyText });
     } catch (err: any) {
-      // Clean Audit log (obscuring internal traces)
-      console.error("Gemini API Error:", err.message || err);
-      res.json({
-        text: "🐶 **Assessment Sync Interrupted**: Something went wrong while parsing the collar's emotional frequencies. Please try sending your diagnostic query again shortly."
-      });
+      console.error("Gemini API Error:", err);
+      res.status(500).json({ error: err.message || "An error occurred with PetPulse AI Assistant." });
     }
   });
 
@@ -226,7 +145,7 @@ PERSONALITY & DISCLAIMERS:
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
