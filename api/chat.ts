@@ -93,6 +93,34 @@ PERSONALITY & DISCLAIMERS:
     let fallbackTriggered = false;
     let accumulatedError: any = null;
 
+    // Helper to safely parse Nested or JSON-stringified ApiErrors from GoogleGenAI SDK
+    const parseGenAIError = (err: any) => {
+      let code: number | undefined = err?.status || err?.statusCode || err?.code;
+      let statusStr: string | undefined = err?.statusText;
+      let message: string = err?.message || "";
+
+      if (err?.message) {
+        try {
+          const parsed = JSON.parse(err.message);
+          if (parsed?.error) {
+            code = parsed.error.code || code;
+            statusStr = parsed.error.status || statusStr;
+            message = parsed.error.message || message;
+          }
+        } catch {
+          // Message was not stringified JSON, continue
+        }
+      }
+      
+      if (err?.error && typeof err.error === "object") {
+        code = err.error.code || code;
+        statusStr = err.error.status || statusStr;
+        message = err.error.message || message;
+      }
+
+      return { code, status: statusStr, message };
+    };
+
     for (const model of modelsToTry) {
       if (replyText) break;
       
@@ -112,16 +140,18 @@ PERSONALITY & DISCLAIMERS:
           }
         } catch (err: any) {
           accumulatedError = err;
-          const status = err?.status;
-          const errMessage = err?.message || "";
+          const parsedErr = parseGenAIError(err);
+          const code = parsedErr.code;
+          const errMessage = parsedErr.message;
+          const status = parsedErr.status;
           
           // Log error safely without exposing secrets
           console.warn(
-            `[Gemini Retry Log] Model ${model} failed on attempt ${attempt}. Status: ${status}. Error: ${errMessage.replace(apiKey, "REDACTED_API_KEY")}`
+            `[Gemini Retry Log] Model ${model} failed on attempt ${attempt}. Code: ${code}, Status: ${status}. Error: ${errMessage.replace(apiKey, "REDACTED_API_KEY")}`
           );
 
           // If the error indicates a direct auth error, don't keep retrying (API key is invalid)
-          if (status === 400 || status === 403 || errMessage.includes("key is invalid") || errMessage.includes("not valid") || errMessage.includes("API key")) {
+          if (code === 400 || code === 403 || errMessage.includes("key is invalid") || errMessage.includes("not valid") || errMessage.includes("API key")) {
             throw err;
           }
 
