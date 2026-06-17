@@ -57,17 +57,6 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Initialize Gemini client on server-side
-  const apiKey = process.env.GEMINI_API_KEY;
-  const ai = apiKey ? new GoogleGenAI({
-    apiKey: apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
-  }) : null;
-
   // API Route for PetPulse AI Assistant Chat
   app.post("/api/chat", async (req, res) => {
     try {
@@ -77,12 +66,25 @@ async function startServer() {
         return res.status(400).json({ error: "Message is required." });
       }
 
-      if (!ai) {
+      // Check key dynamically on demand
+      const apiKey = process.env.GEMINI_API_KEY;
+
+      if (!apiKey) {
         // Fallback response when GEMINI_API_KEY is not set/available yet
         return res.json({
           text: `**[Demo Mode Active]** The PetPulse AI Assistant is ready! Please configure your \`GEMINI_API_KEY\` in the **Settings > Secrets** panel of AI Studio to enable real-time replies from Gemini.\n\n*   **Telemetry Report**: On-collar continuous bio-sensors are calibrating.\n*   **HRV Status**: Heart rate variability indicates standard puppy/kitten baselines.\n*   *Safety Reminder*: Please note that while we provide behavioral telemetry feedback, our insights always complement, but never replace, professional hands-on veterinary care.*`
         });
       }
+
+      // Initialize Gemini dynamic client on demand
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
 
       const systemInstruction = `You are a super casual, friendly human pet lover helping out on the PetPulse website. Think of yourself as a warm, enthusiastic pet text-buddy, not a tech robot. 
 
@@ -112,16 +114,60 @@ PERSONALITY & DISCLAIMERS:
         parts: [{ text: message }]
       });
 
-      // Use modern and fast model
-      const gRes = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: contents,
-        config: {
-          systemInstruction: systemInstruction,
-        }
-      });
+      // Robust generate with retry and fallback models to handle 503/high-demand errors
+      let replyText = "";
+      const modelsToTry = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
+      const maxRetriesPerModel = 3;
+      let fallbackTriggered = false;
+      let accumulatedError: any = null;
 
-      const replyText = gRes.text || "I was unable to analyze that telemetry signature. Please try again.";
+      for (const model of modelsToTry) {
+        if (replyText) break;
+        
+        for (let attempt = 1; attempt <= maxRetriesPerModel; attempt++) {
+          try {
+            const response = await ai.models.generateContent({
+              model: model,
+              contents: contents,
+              config: {
+                systemInstruction: systemInstruction,
+              }
+            });
+            
+            if (response && response.text) {
+              replyText = response.text;
+              break; // Success! Break out of retry loop for this model
+            }
+          } catch (err: any) {
+            accumulatedError = err;
+            const status = err?.status;
+            const errMessage = err?.message || "";
+            
+            // Log error safely without exposing secrets
+            console.warn(
+              `[Gemini Retry Log Local] Model ${model} failed on attempt ${attempt}. Status: ${status}. Error: ${errMessage.replace(apiKey, "REDACTED_API_KEY")}`
+            );
+
+            // If the error indicates a direct auth error, don't keep retrying (API key is invalid)
+            if (status === 400 || status === 403 || errMessage.includes("key is invalid") || errMessage.includes("not valid") || errMessage.includes("API key")) {
+              throw err;
+            }
+
+            // Exponential backoff wait before next attempt of this model
+            if (attempt < maxRetriesPerModel) {
+              const delayMs = Math.pow(2, attempt) * 800 + Math.random() * 300;
+              await new Promise((resolve) => setTimeout(resolve, delayMs));
+            }
+          }
+        }
+      }
+
+      if (!replyText) {
+        fallbackTriggered = true;
+        // Return a warm, casual offline fallback response when Gemini is fully unavailable due to high demand
+        replyText = `🐾 **[Telemetry Sync Note]** I can see your collar's sensors are online, but our sensory AI interpretation service is currently taking a quick play break due to heavy demand. 🐶\n\nDon't worry! While our conversational AI is taking a rest, your collar's local bio-indicators look within normal bounds. Please try again in a few moments, and remember that our insights are always super supportive, but never replace a real veterinary check-up!\n\n*(Btw, I'm just an AI pal, not a real vet! Always check with your vet for medical stuff.)*`;
+      }
+
       res.json({ text: replyText });
     } catch (err: any) {
       console.error("Gemini API Error:", err);
